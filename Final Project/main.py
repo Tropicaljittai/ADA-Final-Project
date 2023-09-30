@@ -6,15 +6,13 @@ app = Ursina()
 
 player = fpc()
 #models
-ground = Entity(model = 'scene.gltf', collider = 'mesh')
+ground = Entity(model = 'asset/obj/ParkingLot.obj', collider = 'mesh', scale = 5, position  = (0,0,0))
 car1 = Entity(model = "asset/gltf/car_sedan.gltf", position = (5,0.4,5), scale = 5, speed = 8)
 car2 = Entity(model = "asset/gltf/car_taxi.gltf", position = (10,0.4,5), scale = 5, speed = 8)
-# wall_left = Entity(model='cube', collider='box', scale_y=3, origin_y=-.5, color=color.azure, x=-4)
-# wall_right = duplicate(wall_left, x=4)
-
+smurfcat = Entity(model = "asset/gltf/smurfs.gltf", position = (-5,0,5), scale = 0.5)
 #colliders
-# car1.collider = BoxCollider(car1, center=Vec3(0,0,0), size=Vec3(2.5,2.5,2.5))
-# car2.collider = BoxCollider(car2, center=Vec3(0,0,0), size=Vec3(2.5,2.5,2.5))
+car1.collider = BoxCollider(car1, center=Vec3(0,0,0), size=Vec3(0.75,0.75,0.75))
+car2.collider = BoxCollider(car2, center=Vec3(0,0,0), size=Vec3(0.75,0.75,0.75))
 
 #controlling the model
 def update():
