@@ -23,6 +23,8 @@ camera.rotation = (18,-15,0)
 follow = SmoothFollow(target=car1, speed=8, offset=[0,10,-4])
 camera.add_script(follow)
 car1.car1state = 0
+
+# Steering
 car1.turning = 0
 
 #controlling the model
@@ -39,14 +41,6 @@ def update():
     r7 = raycast(car1.position, direction=(-1,0,-1), distance=7, debug=True)
     r8 = raycast(car1.position, direction=(-1,0,1), distance=7, debug=True)
 
-
-    # Car movements
-    # if (car1.intersects(car2).hit == False):
-    #     car1.position += (held_keys['s'] - held_keys['w'])* car1.speed * time.dt * car1.forward
-    #     if held_keys['w']:
-    #         car1.rotation_y += (held_keys['d'] - held_keys['a'])* time.dt*200
-    #     if held_keys['s']:
-    #         car1.rotation_y += (held_keys['d'] - held_keys['a'])* time.dt*200
     if held_keys['w'] or held_keys['s']:
         if(car1.speed < 5):
             car1.speed += 1 * time.dt
@@ -69,6 +63,6 @@ def update():
             car1.position -= car1.speed * time.dt * car1.forward
         if(car1.car1state == 1):
             car1.position += car1.speed * time.dt * car1.forward
-    
+
 
 app.run()
