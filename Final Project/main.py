@@ -27,6 +27,12 @@ car1.car1state = 0
 # Steering
 car1.turning = 0
 
+#Throttle
+car1.throttle = 0
+
+#Brake
+car1.braking = 0
+
 #controlling the model
 def update():
         
@@ -42,10 +48,14 @@ def update():
     r8 = raycast(car1.position, direction=(-1,0,1), distance=7, debug=True)
 
     if held_keys['w'] or held_keys['s']:
-        if(car1.speed < 5):
-            car1.speed += 1 * time.dt
-        car1.car1state = held_keys['s'] - held_keys['w']
-        car1.position += (car1.car1state)* car1.speed * time.dt * car1.forward
+        if held_keys['w']:
+            if(car1.speed > -5):
+                car1.speed -= 1 * time.dt
+        if held_keys['s']:
+            if(car1.speed < 5):
+                car1.speed += 1 * time.dt
+        car1.throttle = car1.speed * time.dt * car1.forward
+        car1.position += car1.throttle
         if (held_keys['w'] or held_keys['s']) and held_keys['a']:
             if car1.turning > 0:
                 car1.turning = 0
@@ -57,12 +67,14 @@ def update():
             car1.turning += 10 * time.dt
             car1.rotation_y += time.dt*car1.turning
         print(car1.turning)
-    elif not held_keys['w'] and not held_keys['s'] and car1.speed > 0:
-        car1.speed -= 1 * time.dt
-        if(car1.car1state == -1):
-            car1.position -= car1.speed * time.dt * car1.forward
-        if(car1.car1state == 1):
-            car1.position += car1.speed * time.dt * car1.forward
+    elif not held_keys['w'] and not held_keys['s'] and car1.throttle != 0:
+        car1.throttle = car1.speed * time.dt * car1.forward
+        if(car1.throttle > 0):
+            car1.speed += 1 * time.dt
+            car1.position += car1.throttle
+        if(car1.throttle < 0):
+            car1.speed -= 1 * time.dt
+            car1.position += car1.throttle
 
 
 app.run()
