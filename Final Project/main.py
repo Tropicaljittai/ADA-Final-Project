@@ -47,6 +47,9 @@ def update():
     r7 = raycast(car1.position, direction=(-1,0,-1), distance=7, debug=True)
     r8 = raycast(car1.position, direction=(-1,0,1), distance=7, debug=True)
 
+    car1.throttle = car1.speed * time.dt * car1.forward
+    car1.position += car1.throttle
+    
     #Car movements
     if held_keys['w'] or held_keys['s']:
 
@@ -59,9 +62,8 @@ def update():
         if held_keys['s']:
             if(car1.speed < 3):
                 car1.speed += 1 * time.dt
-
-        car1.throttle = car1.speed * time.dt * car1.forward
-        car1.position += car1.throttle
+                car1.rotation_directions[0,0,0]
+                
 
 
         if (held_keys['w'] or held_keys['s']) and held_keys['a']:
@@ -88,12 +90,11 @@ def update():
 
         if(car1.speed > 0):
             car1.speed -= 1 * time.dt
-            car1.position += car1.throttle
         if(car1.speed < 0):
             car1.speed += 1 * time.dt
-            car1.position += car1.throttle
         
-        car1.throttle = car1.speed * time.dt * car1.forward
+
+
         if not held_keys['a'] and not held_keys['d']:
 
             if car1.turning < 0:
@@ -118,6 +119,12 @@ def update():
                 if car1.turning < 35:
                     car1.turning += 10 * time.dt
                 car1.rotation_y += time.dt*car1.turning
+
+    if held_keys['space']:
+        if car1.speed > 0:
+            car1.speed -= 2 * time.dt
+        if car1.speed < 0:
+            car1.speed += 2 * time.dt
 
     print("Speed: ",car1.speed)
 
