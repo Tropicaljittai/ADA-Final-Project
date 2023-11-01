@@ -47,34 +47,82 @@ def update():
     r7 = raycast(car1.position, direction=(-1,0,-1), distance=7, debug=True)
     r8 = raycast(car1.position, direction=(-1,0,1), distance=7, debug=True)
 
+    #Car movements
     if held_keys['w'] or held_keys['s']:
+
+        if held_keys['w'] and held_keys['s']:
+            car1.speed = 0
         if held_keys['w']:
-            if(car1.speed > -5):
+            if(car1.speed > -3):
                 car1.speed -= 1 * time.dt
+
         if held_keys['s']:
-            if(car1.speed < 5):
+            if(car1.speed < 3):
                 car1.speed += 1 * time.dt
+
         car1.throttle = car1.speed * time.dt * car1.forward
         car1.position += car1.throttle
+
+
         if (held_keys['w'] or held_keys['s']) and held_keys['a']:
             if car1.turning > 0:
                 car1.turning = 0
-            car1.turning -= 10 * time.dt
+            if car1.turning > -35:
+                car1.turning -= 20 * time.dt
             car1.rotation_y += time.dt*car1.turning
         if (held_keys['w'] or held_keys['s']) and held_keys['d']:
             if car1.turning < 0:
                 car1.turning = 0
-            car1.turning += 10 * time.dt
+            if car1.turning < 35:
+                car1.turning += 20 * time.dt
             car1.rotation_y += time.dt*car1.turning
-        print(car1.turning)
-    elif not held_keys['w'] and not held_keys['s'] and car1.throttle != 0:
-        car1.throttle = car1.speed * time.dt * car1.forward
-        if(car1.throttle > 0):
-            car1.speed += 1 * time.dt
-            car1.position += car1.throttle
-        if(car1.throttle < 0):
+        
+        if not held_keys['a'] and not held_keys['d']:
+
+            if car1.turning < 0:
+                car1.turning += 10 * time.dt
+            if car1.turning > 0:
+                car1.turning -= 10 * time.dt
+
+    if not held_keys['w'] and not held_keys['s']:
+
+        if(car1.speed > 0):
             car1.speed -= 1 * time.dt
             car1.position += car1.throttle
+        if(car1.speed < 0):
+            car1.speed += 1 * time.dt
+            car1.position += car1.throttle
+        
+        car1.throttle = car1.speed * time.dt * car1.forward
+        if not held_keys['a'] and not held_keys['d']:
+
+            if car1.turning < 0:
+                car1.turning += 10 * time.dt
+            if car1.turning > 0:
+                car1.turning -= 10 * time.dt
+
+    if held_keys['a'] or held_keys['d']:
+        if held_keys['a'] and held_keys['d']:
+            car1.turning = 0
+        elif held_keys['a']:
+            if int(car1.speed) != 0:
+                if car1.turning > 0:
+                    car1.turning = 0
+                if car1.turning > -35:
+                    car1.turning -= 10 * time.dt
+                car1.rotation_y += time.dt*car1.turning
+        elif held_keys['d']:
+            if int(car1.speed) != 0:
+                if car1.turning < 0:
+                    car1.turning = 0
+                if car1.turning < 35:
+                    car1.turning += 10 * time.dt
+                car1.rotation_y += time.dt*car1.turning
+
+    print("Speed: ",car1.speed)
+
+    
+
 
 
 app.run()
