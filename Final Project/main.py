@@ -7,7 +7,7 @@ app = Ursina()
 
 # player = fpc()
 #models
-ground = Entity(model = 'asset/obj/ParkingLot.obj', collider = 'mesh', scale = 7, position  = (0,0,0))
+ground = Entity(model = 'asset/obj/parking_lot.obj', collider = 'mesh', scale = 7, position  = (0,0,0))
 car1 = Entity(model = "asset/gltf/car_sedan.gltf", position = (-1.3,0.4,-0.6), scale = 3.5, speed = 0)
 car1.rotation = (0,-90,0)
 
