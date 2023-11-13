@@ -2,151 +2,195 @@ from ursina import *
 import random
 from ursina.prefabs.first_person_controller import FirstPersonController as fpc
 
+sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
+
 # create a window
 app = Ursina()
 
-# player = fpc()
 #models
 ground = Entity(model = 'asset/obj/parking_lot.obj', collider = 'mesh', scale = 7, position  = (0,0,0))
-car1 = Entity(model = "asset/gltf/car_sedan.gltf", position = (-1.3,0.4,-0.6), scale = 3.5, speed = 0)
-car1.rotation = (0,-90,0)
 
-car2 = Entity(model = "asset/gltf/car_taxi.gltf", position = (9,0.4,-3.7), scale = 3.5, speed = 0)
-car2.rotation = (0,90,0)
-smurfcat = Entity(model = "asset/gltf/smurfs.gltf", position = (-5,0,5), scale = 0.5)
-#colliders
-car1.collider = MeshCollider(car1, mesh=car1.model, center=Vec3(0,0,0))
-car2.collider = MeshCollider(car2, mesh=car2.model, center=Vec3(0,0,0))
+car1 = Entity(model = "asset/gltf/car_sedan.gltf", position = (-1.3,0.1,-0.6), scale = 3.5, topspeed = -5, acceleration = 0.05, braking_strength = 5, friction = 0.6, camera_speed = 8   )
+
+car1.rotation_parent = Entity()
+
+# Controls
+car1.controls = "wasd"
+
+# Car's values
+car1.copy_normals = False
+car1.speed = 0
+car1.velocity_y = 0
+car1.rotation_speed = 0
+car1.max_rotation_speed = 2.6
+car1.steering_amount = 8
+car1.turning_speed = 5
+car1.pivot_rotation_distance = 1
+
+
+# Bools
+car1.driving = False
+car1.braking = False
+
+car1.ai = False
+car1.ai_list = []
+
+# Pivot for drifting
+car1.pivot = Entity()
+car1.pivot.position = car1.position
+car1.pivot.rotation = car1.rotation
 
 camera.position = (13,14,-40)
 camera.rotation = (18,-15,0)
 
 follow = SmoothFollow(target=car1, speed=8, offset=[0,10,-4])
 camera.add_script(follow)
-car1.car1state = 0
-
-# Steering
-car1.turning = 0
-
-#Throttle
-car1.speed = 0
-car1.throttle = 0
-
-#Brake
-car1.braking = 0
-
-ai_throttle = 0
-ai_braking = 0
-ai_turning = 0
 
 
 #controlling the model
 def update():
-        
-    ai_throttle = random.uniform(-1, 1.0)
-    ai_braking = random.uniform(-1, 1.0)
-    ai_turning = random.uniform(-1, 1.0)
+    y_ray = raycast(origin = car1.world_position, direction = (0, -1, 0), ignore = [car1, ])
 
-    print(ai_throttle)
-    # ai_turning = random.uniform(0.0, 1.0)
-    #Car sensors
-    r1 = raycast(car1.position, direction=(1,0,0), distance=7, debug=True)
-    r2 = raycast(car1.position, direction=(-1,0,0), distance=7, debug=True)
-    r3 = raycast(car1.position, direction=(1,0,100), distance=7, debug=True)
-    r4 = raycast(car1.position, direction=(1,0,-100), distance=7, debug=True)
-    r5 = raycast(car1.position, direction=(1,0,1), distance=7, debug=True)
-    r6 = raycast(car1.position, direction=(1,0,-1), distance=7, debug=True)
-    r7 = raycast(car1.position, direction=(-1,0,-1), distance=7, debug=True)
-    r8 = raycast(car1.position, direction=(-1,0,1), distance=7, debug=True)
+        # The y rotation distance between the car and the pivot
+    car1.pivot_rotation_distance = (car1.rotation_y - car1.pivot.rotation_y)
+
+    # Gravity
+    movementY = car1.velocity_y / 50
+    direction = (0, sign(movementY), 0)
+
+    car1.rotation_y += car1.rotation_speed * 50 * time.dt
+
+    if car1.rotation_speed > 0:
+        car1.rotation_speed -= car1.speed / 6 * time.dt
+    elif car1.rotation_speed < 0:
+        car1.rotation_speed += car1.speed / 6 * time.dt
+
+    if car1.speed >= 1 or car1.speed <= -1:
+        if held_keys[car1.controls[1]] or held_keys["left arrow"]:
+            car1.rotation_speed -= car1.steering_amount * time.dt
+            if car1.speed >= 1:
+                car1.speed -= car1.turning_speed * time.dt
+            elif car1.speed <= 0:
+                car1.speed += car1.turning_speed / 5 * time.dt
+        elif held_keys[car1.controls[3]] or held_keys["right arrow"]:
+            car1.rotation_speed += car1.steering_amount * time.dt
+            if car1.speed >= 1:
+                car1.speed -= car1.turning_speed * time.dt
+            elif car1.speed <= 0:
+                car1.speed += car1.turning_speed / 5 * time.dt
+        else:
+            if car1.rotation_speed > 0:
+                car1.rotation_speed -= 5 * time.dt
+            elif car1.rotation_speed < 0:
+                car1.rotation_speed += 5 * time.dt
+    else:
+        car1.rotation_speed = 0
+
+    # Cap the speed
+    if car1.speed <= car1.topspeed:
+        car1.speed = car1.topspeed
+    if car1.speed >= 7:
+        car1.speed = 7
+    if car1.speed <= 0:
+        car1.pivot.rotation_y = car1.rotation_y
 
 
-    car1.throttle = (car1.speed * time.dt) * car1.forward
-    car1.position += car1.throttle
+    # Cap the steering
+    if car1.rotation_speed >= car1.max_rotation_speed:
+        car1.rotation_speed = car1.max_rotation_speed
+    if car1.rotation_speed <= -car1.max_rotation_speed:
+        car1.rotation_speed = -car1.max_rotation_speed
     
-    # #Car movements manual
-    # if held_keys['w']:
-    #     if car1.speed > -5:
-    #         car1.speed -= 2 * time.dt
-    #     car1.speed += car1.braking * time.dt
-    #     car1.rotation_y += time.dt*car1.turning
-    #     if held_keys['a']:
-    #         if car1.turning >  -20:
-    #             car1.turning = -20
-    #         if car1.turning > -100:
-    #             car1.turning -= 15 * time.dt
-        
-    #     if held_keys['d']:
-    #         if car1.turning < 20:
-    #             car1.turning = 20
-    #         if car1.turning < 100:
-    #             car1.turning += 15 * time.dt
 
-    # if held_keys['s']:
-    #     if car1.speed < 5:
-    #         car1.speed += 2 * time.dt
-    #     car1.speed += car1.braking * time.dt
-    #     car1.rotation_y += time.dt*car1.turning
-    #     if held_keys['a']:
-    #         if car1.turning >  -20:
-    #             car1.turning = -20
-    #         if car1.turning > -100:
-    #             car1.turning -= 15 * time.dt
-        
-    #     if held_keys['d']:
-    #         if car1.turning < 20:
-    #             car1.turning = 20
-    #         if car1.turning < 100:
-    #             car1.turning += 15 * time.dt
+    if held_keys[car1.controls[0]] or held_keys["up arrow"]:
+        car1.speed -= car1.acceleration * 50 * time.dt
+        car1.speed -= -car1.velocity_y * 4 * time.dt
 
-    # if held_keys['space']:
-    #     if car1.speed <= 0.03 and car1.speed >= -0.03:
-    #         car1.speed = 0
-    #         car1.braking = 0
-    #     else:
-    #         if car1.speed < 0:
-    #             car1.braking += 2 * time.dt
-    #         if car1.speed > 0:
-    #             car1.braking -= 2 * time.dt
+        car1.driving = True
+
+    # Braking
+    if held_keys[car1.controls[2] or held_keys["down arrow"]]:
+        car1.speed += car1.acceleration * 50 * time.dt
+        car1.speed += -car1.velocity_y * 4 * time.dt
+
+        car1.driving = True
+
+    if not (held_keys[car1.controls[0]] or held_keys["up arrow"]) and not (held_keys[car1.controls[2] or held_keys["down arrow"]]):
+        car1.driving = False
+        if car1.speed < -1:
+            car1.speed += car1.friction * 5 * time.dt
+        elif car1.speed > 1:
+            car1.speed -= car1.friction * 5 * time.dt
 
 
-    # if not held_keys['a'] and not held_keys['d']:
-    #     if car1.turning < 0:
-    #         car1.turning += 100 * time.dt
-    #     if car1.turning > 0:
-    #         car1.turning -= 100 * time.dt
+    # Hand Braking
+    if held_keys["space"]:
+        if car1.speed < 0:
+            if car1.rotation_speed < 0:
+                car1.rotation_speed -= 3 * time.dt
+            elif car1.rotation_speed > 0:
+                car1.rotation_speed += 3 * time.dt
+            car1.speed += 20 * time.dt
+            car1.max_rotation_speed = 3.0
+        if car1.speed > 0:
+            if car1.rotation_speed < 0:
+                car1.rotation_speed -= 3 * time.dt
+            elif car1.rotation_speed > 0:
+                car1.rotation_speed += 3 * time.dt
+            car1.speed -= 20 * time.dt
+            car1.max_rotation_speed = 3.0
 
-    # if not held_keys['space']:
-    #     car1.braking = 0
+    if car1.visible:
+        if y_ray.distance <= car1.scale_y * 1.7 + abs(movementY):
+            car1.velocity_y = 0
+            # Check if hitting a wall or steep slope
+            if y_ray.world_normal.y > 0.7 and y_ray.world_point.y - car1.world_y < 0.5:
+                # Set the y value to the ground's y value
+                car1.y = y_ray.world_point.y + 1.4
+                car1.hitting_wall = False
+            else:
+                # Car is hitting a wall
+                car1.hitting_wall = True
 
-    # if not held_keys['w'] and not held_keys['s']:
-    #     if held_keys['a']:
-    #         if car1.turning >  -20:
-    #             car1.turning = -20
-    #         if car1.turning > -100:
-    #             car1.turning -= 15 * time.dt
-        
-    #     if held_keys['d']:
-    #         if car1.turning < 20:
-    #             car1.turning = 20
-    #         if car1.turning < 100:
-    #             car1.turning += 15 * time.dt
-    #     if car1.speed < 0:
-    #         car1.speed += 3 * time.dt
-    #         car1.rotation_y += time.dt*car1.turning
-    #     if car1.speed > 0:
-    #         car1.speed -= 3  * time.dt
-    #         car1.rotation_y += time.dt*car1.turning
-    #     if car1.speed <= 0.01 and car1.speed >= -0.09:
-    #         car1.speed = 0
+            if car1.copy_normals:
+                car1.ground_normal = car1.position + y_ray.world_normal
+            else:
+                car1.ground_normal = car1.position + (0, 180, 0)
 
-    #Car movements for ai
+            # Rotates the car according to the grounds normals
+            if not car1.hitting_wall:
+                car1.rotation_parent.look_at(car1.ground_normal, axis = "up")
+                car1.rotation_parent.rotate((0, car1.rotation_y + 180, 0))
+            else:
+                car1.rotation_parent.rotation = car1.rotation
 
-    car1.braking = ai_braking * 5
-    car1.speed = ai_throttle * 5
-    car1.speed += car1.braking * time.dt 
-    car1.rotation_y += ai_turning * 100
+        else:
+            car1.y += movementY * 50 * time.dt
+            car1.velocity_y -= 50 * time.dt
+            car1.rotation_parent.rotation = car1.rotation
+            car1.start_fall = True
 
-    car1.throttle = (car1.speed * time.dt) * car1.forward
-    car1.position += car1.throttle
+     # Movement
+    movementX = car1.pivot.forward[0] * car1.speed * time.dt
+    movementZ = car1.pivot.forward[2] * car1.speed * time.dt
+
+    # Collision Detection
+    if movementX != 0:
+        direction = (sign(movementX), 0, 0)
+        x_ray = raycast(origin = car1.world_position, direction = direction, ignore = [car1, ])
+
+        if x_ray.distance > car1.scale_x / 2 + abs(movementX):
+            car1.x += movementX
+
+    if movementZ != 0:
+        direction = (0, 0, sign(movementZ))
+        z_ray = raycast(origin = car1.world_position, direction = direction, ignore = [car1, ])
+
+        if z_ray.distance > car1.scale_z / 2 + abs(movementZ):
+            car1.z += movementZ
+
+    print(car1.speed)
+
+   
 
 app.run()
