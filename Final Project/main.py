@@ -140,10 +140,10 @@ def update():
         elif car1.speed > 1:
             car1.speed -= car1.friction * 5 * time.dt
 
-        if str(car1.speed)[2] != '0' and str(car1.speed)[0] == '-':
-            car1.speed += 1 * time.dt
-        elif str(car1.speed)[2] != '0':
-            car1.speed -= 1 * time.dt
+        if str(car1.speed)[0:2] == '-0':
+            car1.speed = 0
+        elif str(car1.speed)[0] == '0':
+            car1.speed = 0
 
 
     # Hand Braking
