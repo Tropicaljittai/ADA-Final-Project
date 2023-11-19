@@ -1,16 +1,34 @@
 from ursina import *
 import random
+from tiang import Tiang
 from ursina.prefabs.first_person_controller import FirstPersonController as fpc
 
 sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
 
 # create a window
-app = Ursina()
+app = Ursina(
+    title = "joseph",
+    vsync = True,
+    development_mode = True
+)
+
+#camera config
+camera.fov = 60
+camera.position = (5,5,-30)
+camera.rotation = (0,0,0)
 
 #models
-ground = Entity(model = 'asset/obj/parking_lot.obj', collider = 'mesh', scale = 7, position  = (0,0,0))
+ground = Entity(model = 'asset/obj/parkinglot.obj', collider = 'mesh', scale = 7, position  = (0,0,0))
+car1 = Entity(model = "asset/gltf/car_sedan.gltf", position = (-1.3,0.1,-0.6), scale = 3.5, topspeed = -5, acceleration = 0.05, braking_strength = 5, friction = 0.6, camera_speed = 8, rigidbody = True)
 
-car1 = Entity(model = "asset/gltf/car_sedan.gltf", position = (-1.3,0.1,-0.6), scale = 3.5, topspeed = -5, acceleration = 0.05, braking_strength = 5, friction = 0.6, camera_speed = 8   )
+#tiang/pole
+tiang = Tiang(color = color.red, position = (1,0,0))
+tiang2 = Tiang(color = color.blue, position = (0.75,0,-7))
+tiang3 = Tiang(color = color.green, position = (-5,0,-20))
+#rotated pole
+tiang4 = Tiang(color = color.yellow, position = (7.25,0,23), rotation = (0,180,0))
+tiang5 = Tiang(color = color.white, position = (7.25,0,16), rotation = (0,180,0))
+tiang6 = Tiang(color = color.black, position = (13,0,-1), rotation = (0,180,0))
 
 car1.rotation_parent = Entity()
 
@@ -40,18 +58,13 @@ car1.pivot = Entity()
 car1.pivot.position = car1.position
 car1.pivot.rotation = car1.rotation
 
-camera.position = (13,14,-40)
-camera.rotation = (18,-15,0)
-
 follow = SmoothFollow(target=car1, speed=8, offset=[0,10,-4])
-camera.add_script(follow)
-
 
 #controlling the model
 def update():
     y_ray = raycast(origin = car1.world_position, direction = (0, -1, 0), ignore = [car1, ])
 
-        # The y rotation distance between the car and the pivot
+    # The y rotation distance between the car and the pivot
     car1.pivot_rotation_distance = (car1.rotation_y - car1.pivot.rotation_y)
 
     # Gravity
@@ -145,7 +158,6 @@ def update():
         elif str(car1.speed)[0] == '0':
             car1.speed = 0
 
-
     # Hand Braking
     if held_keys["space"]:
         if car1.speed < 0:
@@ -197,11 +209,6 @@ def update():
     movementZ = car1.pivot.forward[2] * car1.speed * time.dt
             
     car1.x += movementX
-
     car1.z += movementZ
-
-    print(car1.speed)
-
-   
 
 app.run()
