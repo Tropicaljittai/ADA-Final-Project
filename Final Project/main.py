@@ -58,15 +58,14 @@ car1.pivot = Entity()
 car1.pivot.position = car1.position
 car1.pivot.rotation = car1.rotation
 
-# camera.position = (13,14,-40)
-# camera.rotation = (18,-15,0)
+camera.position = (13,14,-40)
+camera.rotation = (18,-15,0)
 
 follow = SmoothFollow(target=car1, speed=8, offset=[0,10,-4])
 camera.add_script(follow)
 
 #controlling the model
 def update():
-    car1.rotation_y += 5
     y_ray = raycast(origin = car1.world_position, direction = (0, -1, 0), ignore = [car1, ])
 
         # The y rotation distance between the car and the pivot
@@ -187,7 +186,7 @@ def update():
             # Check if hitting a wall or steep slope
             if y_ray.world_normal.y > 0.7 and y_ray.world_point.y - car1.world_y < 0.5:
                 # Set the y value to the ground's y value
-                car1.y = y_ray.world_point.y + 0.2
+                car1.y = y_ray.world_point.y + 0.3
                 car1.hitting_wall = False
             else:
                 # Car is hitting a wall
