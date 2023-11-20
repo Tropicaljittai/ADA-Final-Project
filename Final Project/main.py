@@ -1,3 +1,5 @@
+import math
+
 from ursina import *
 import random
 from tiang import Tiang
@@ -64,8 +66,49 @@ camera.rotation = (18,-15,0)
 follow = SmoothFollow(target=car1, speed=8, offset=[0,10,-4])
 camera.add_script(follow)
 
+#Sensors
+rayCount = 10
+rayLength = 10
+raySpread = 360
+ray_lines = []
+
+line_shader = Shader(language=Shader.GLSL, vertex='''
+#version 140
+uniform mat4 modelview_projection;
+
+in vec4 p3d_Vertex;
+
+void main() {
+    gl_Position = modelview_projection * p3d_Vertex;
+}
+''', fragment='''
+#version 140
+
+uniform vec4 color;
+out vec4 fragColor;
+
+void main() {
+    fragColor = color;
+}
+''')
+
+
+
+
+
 #controlling the model
 def update():
+    for i in range(rayCount):
+        rayAngle = i / (rayCount - 1) * raySpread - raySpread / 2
+        direction = Vec3(math.sin(math.radians(rayAngle)), 0, -math.cos(math.radians(rayAngle)))
+        start_point = car1.position
+        end_point = car1.position + direction * rayLength
+
+        ray_line = Entity(model='cube', shader=line_shader, color=color.yellow, scale=(0.05, 0.05, rayLength))
+        ray_line.position = (start_point + end_point) / 2
+        ray_line.look_at(end_point)
+        ray_lines.append(ray_line)
+
     y_ray = raycast(origin = car1.world_position, direction = (0, -1, 0), ignore = [car1, ])
 
         # The y rotation distance between the car and the pivot
