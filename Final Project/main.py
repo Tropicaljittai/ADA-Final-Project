@@ -58,14 +58,18 @@ car1.pivot = Entity()
 car1.pivot.position = car1.position
 car1.pivot.rotation = car1.rotation
 
+# camera.position = (13,14,-40)
+# camera.rotation = (18,-15,0)
+
 follow = SmoothFollow(target=car1, speed=8, offset=[0,10,-4])
+camera.add_script(follow)
 
 #controlling the model
 def update():
     car1.rotation_y += 5
     y_ray = raycast(origin = car1.world_position, direction = (0, -1, 0), ignore = [car1, ])
 
-    # The y rotation distance between the car and the pivot
+        # The y rotation distance between the car and the pivot
     car1.pivot_rotation_distance = (car1.rotation_y - car1.pivot.rotation_y)
 
     # Gravity
@@ -159,6 +163,7 @@ def update():
         elif str(car1.speed)[0] == '0':
             car1.speed = 0
 
+
     # Hand Braking
     if held_keys["space"]:
         if car1.speed < 0:
@@ -182,7 +187,7 @@ def update():
             # Check if hitting a wall or steep slope
             if y_ray.world_normal.y > 0.7 and y_ray.world_point.y - car1.world_y < 0.5:
                 # Set the y value to the ground's y value
-                car1.y = y_ray.world_point.y + 0.4
+                car1.y = y_ray.world_point.y + 0.2
                 car1.hitting_wall = False
             else:
                 # Car is hitting a wall
@@ -192,13 +197,7 @@ def update():
                 car1.ground_normal = car1.position + y_ray.world_normal
             else:
                 car1.ground_normal = car1.position + (0, 180, 0)
-
-            # Rotates the car according to the grounds normals
-            if not car1.hitting_wall:
-                car1.rotation_parent.look_at(car1.ground_normal, axis = "up")
-                car1.rotation_parent.rotate((0, car1.rotation_y + 180, 0))
-            else:
-                car1.rotation_parent.rotation = car1.rotation
+    
 
         else:
             car1.y += movementY * 50 * time.dt
@@ -209,7 +208,19 @@ def update():
     movementX = car1.pivot.forward[0] * car1.speed * time.dt
     movementZ = car1.pivot.forward[2] * car1.speed * time.dt
             
-    car1.x += movementX
-    car1.z += movementZ
+    # Collision Detection
+    if movementX != 0:
+        direction = (sign(movementX), 0, 0)
+        x_ray = raycast(origin = car1.world_position, direction = direction, ignore = [car1, ])
+
+        if x_ray.distance > car1.scale_x / 2 + abs(movementX):
+            car1.x += movementX
+
+    if movementZ != 0:
+        direction = (0, 0, sign(movementZ))
+        z_ray = raycast(origin = car1.world_position, direction = direction, ignore = [car1, ])
+
+        if z_ray.distance > car1.scale_z / 2 + abs(movementZ):
+            car1.z += movementZ
 
 app.run()
