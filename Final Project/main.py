@@ -62,6 +62,7 @@ follow = SmoothFollow(target=car1, speed=8, offset=[0,10,-4])
 
 #controlling the model
 def update():
+    car1.rotation_y += 5
     y_ray = raycast(origin = car1.world_position, direction = (0, -1, 0), ignore = [car1, ])
 
     # The y rotation distance between the car and the pivot

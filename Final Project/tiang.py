@@ -14,3 +14,5 @@ class Tiang(Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    def update(self):
+        pass
