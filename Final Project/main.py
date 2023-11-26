@@ -72,30 +72,30 @@ driving_data = []
 #recording
 is_driving = False
 #Sensors
-# rayCount = 10
-# rayLength = 10
-# raySpread = 360
-# ray_lines = []
+rayCount = 10
+rayLength = 10
+raySpread = 360
+ray_lines = []
 
-# line_shader = Shader(language=Shader.GLSL, vertex='''
-# #version 140
-# uniform mat4 modelview_projection;
-#
-# in vec4 p3d_Vertex;
-#
-# void main() {
-#     gl_Position = modelview_projection * p3d_Vertex;
-# }
-# ''', fragment='''
-# #version 140
-#
-# uniform vec4 color;
-# out vec4 fragColor;
-#
-# void main() {
-#     fragColor = color;
-# }
-# ''')
+line_shader = Shader(language=Shader.GLSL, vertex='''
+#version 140
+uniform mat4 modelview_projection;
+
+in vec4 p3d_Vertex;
+
+void main() {
+    gl_Position = modelview_projection * p3d_Vertex;
+}
+''', fragment='''
+#version 140
+
+uniform vec4 color;
+out vec4 fragColor;
+
+void main() {
+    fragColor = color;
+}
+''')
 
 
 
@@ -113,16 +113,16 @@ def save_to_csv():
 #controlling the model
 def update():
     global is_driving, driving_data
-    # for i in range(rayCount):
-    #     rayAngle = i / (rayCount) * raySpread - raySpread / 2
-    #     direction = Vec3(math.sin(math.radians(rayAngle)), 0, -math.cos(math.radians(rayAngle)))
-    #     start_point = car1.position
-    #     end_point = car1.position + direction * rayLength
-    #
-    #     ray_line = Entity(model='cube', shader=line_shader, color=color.yellow, scale=(0.05, 0.05, rayLength))
-    #     ray_line.position = (start_point + end_point)/2
-    #     ray_line.look_at(end_point)
-    #     ray_lines.append(ray_line)
+    for i in range(rayCount):
+        rayAngle = i / (rayCount) * raySpread - raySpread / 2
+        direction = Vec3(math.sin(math.radians(rayAngle)), 0, -math.cos(math.radians(rayAngle)))
+        start_point = car1.position
+        end_point = car1.position + direction * rayLength
+
+        ray_line = Entity(model='cube', shader=line_shader, color=color.yellow, scale=(0.05, 0.05, rayLength))
+        ray_line.position = (start_point + end_point)/2
+        ray_line.look_at(end_point)
+        ray_lines.append(ray_line)
     if car1.driving:
         is_driving = True
         data = {
