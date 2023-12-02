@@ -42,15 +42,8 @@ def update():
                 camera.position = (5,5,-30)
                 camera.rotation = (0,0,0)
                 pos += 1
-            elif pos == 2:
-                follow = SmoothFollow(target=car1, speed=8, offset=[0,10,-4])
-                camera.add_script(follow)
-                pos = 0
-
             camera_button_pressed = True
     else:
         camera_button_pressed = False
-    
-
 
 app.run()
