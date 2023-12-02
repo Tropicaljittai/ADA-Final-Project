@@ -23,7 +23,7 @@ camera.rotation = (0,0,0)
 
 #models
 ground = Entity(model = 'asset/obj/parkinglot.obj', collider = 'mesh', scale = 7, position  = (0,0,0))
-car1 = Entity(model = "asset/gltf/car_sedan.gltf", position = (-1.3,0.1,-0.6), scale = 3.5, topspeed = -5, acceleration = 0.05, braking_strength = 5, friction = 0.6, camera_speed = 8, rigidbody = True)
+car1 = Entity(model = "asset/gltf/car_sedan.gltf", position = (-1.3,0.4,-0.6), scale = 3.5, topspeed = -5, acceleration = 0.05, braking_strength = 5, friction = 0.6, camera_speed = 8, rigidbody = True)
 
 #tiang/pole
 tiang = Tiang(color = color.red, position = (1,0,0))
@@ -72,30 +72,30 @@ driving_data = []
 #recording
 is_driving = False
 #Sensors
-rayCount = 10
-rayLength = 10
-raySpread = 360
-ray_lines = []
+# rayCount = 10
+# rayLength = 10
+# raySpread = 360
+# ray_lines = []
 
-line_shader = Shader(language=Shader.GLSL, vertex='''
-#version 140
-uniform mat4 modelview_projection;
+# line_shader = Shader(language=Shader.GLSL, vertex='''
+# #version 140
+# uniform mat4 modelview_projection;
 
-in vec4 p3d_Vertex;
+# in vec4 p3d_Vertex;
 
-void main() {
-    gl_Position = modelview_projection * p3d_Vertex;
-}
-''', fragment='''
-#version 140
+# void main() {
+#     gl_Position = modelview_projection * p3d_Vertex;
+# }
+# ''', fragment='''
+# #version 140
 
-uniform vec4 color;
-out vec4 fragColor;
+# uniform vec4 color;
+# out vec4 fragColor;
 
-void main() {
-    fragColor = color;
-}
-''')
+# void main() {
+#     fragColor = color;
+# }
+# ''')
 
 
 
@@ -111,18 +111,43 @@ def save_to_csv():
     # Reset the driving_data list
     driving_data = []
 #controlling the model
-def update():
-    global is_driving, driving_data
-    for i in range(rayCount):
-        rayAngle = i / (rayCount) * raySpread - raySpread / 2
-        direction = Vec3(math.sin(math.radians(rayAngle)), 0, -math.cos(math.radians(rayAngle)))
-        start_point = car1.position
-        end_point = car1.position + direction * rayLength
 
-        ray_line = Entity(model='cube', shader=line_shader, color=color.yellow, scale=(0.05, 0.05, rayLength))
-        ray_line.position = (start_point + end_point)/2
-        ray_line.look_at(end_point)
-        ray_lines.append(ray_line)
+def update():
+    def rotate_vector_y(vector, angle_degrees):
+        angle_radians = math.radians(angle_degrees)
+        x = vector.x * math.cos(angle_radians) - vector.z * math.sin(angle_radians)
+        z = vector.x * math.sin(angle_radians) + vector.z * math.cos(angle_radians)
+        return Vec3(x, vector.y, z)
+
+    global is_driving, driving_data
+    r1 = raycast(car1.position, direction=car1.forward, distance=7, debug=True)
+    r2 = raycast(car1.position, direction=-car1.forward, distance=7, debug=True)
+    left_45_direction = rotate_vector_y(car1.forward, -45)
+    left_90_direction = rotate_vector_y(car1.forward, -90)
+    right_45_direction = rotate_vector_y(car1.forward, 45)
+
+    r3 = raycast(car1.position, direction=left_45_direction, distance=7, debug=True)
+    r4 = raycast(car1.position, direction=-left_45_direction, distance=7, debug=True)
+    r5 = raycast(car1.position, direction=-left_90_direction, distance=7, debug=True)
+    r6 = raycast(car1.position, direction=left_90_direction, distance=7, debug=True)
+    r7 = raycast(car1.position, direction=right_45_direction, distance=7, debug=True)
+    r8 = raycast(car1.position, direction=-right_45_direction, distance=7, debug=True)
+
+    # raycast(car1.position, direction=(1,0,-100), distance=7, debug=True)
+    # raycast(car1.position, direction=(1,0,1), distance=7, debug=True)
+    # raycast(car1.position, direction=(1,0,-1), distance=7, debug=True)
+    # raycast(car1.position, direction=(-1,0,-1), distance=7, debug=True)
+    # raycast(car1.position, direction=(-1,0,1), distance=7, debug=True)
+    # for i in range(rayCount):
+    #     rayAngle = i / (rayCount) * raySpread - raySpread / 2
+    #     direction = Vec3(math.sin(math.radians(rayAngle)), 0, -math.cos(math.radians(rayAngle)))
+    #     start_point = car1.position
+    #     end_point = car1.position + direction * rayLength
+
+    #     ray_line = Entity(model='cube', shader=line_shader, color=color.yellow, scale=(0.05, 0.05, rayLength))
+    #     ray_line.position = (start_point + end_point)/2
+    #     ray_line.look_at(end_point)
+    #     ray_lines.append(ray_line)
     if car1.driving:
         is_driving = True
         data = {
@@ -254,25 +279,6 @@ def update():
                 car1.rotation_speed += 3 * time.dt
             car1.speed -= 20 * time.dt
             car1.max_rotation_speed = 3.0
-
-    if car1.visible:
-        if y_ray.distance <= car1.scale_y * 1.7 + abs(movementY):
-            car1.velocity_y = 0
-            # Check if hitting a wall or steep slope
-            if y_ray.world_normal.y > 0.7 and y_ray.world_point.y - car1.world_y < 0.5:
-                # Set the y value to the ground's y value
-                car1.y = y_ray.world_point.y + 0.3
-                car1.hitting_wall = False
-            else:
-                # Car is hitting a wall
-                car1.hitting_wall = True
-
-            if car1.copy_normals:
-                car1.ground_normal = car1.position + y_ray.world_normal
-            else:
-                car1.ground_normal = car1.position + (0, 180, 0)
-    
-
         else:
             car1.y += movementY * 50 * time.dt
             car1.velocity_y -= 50 * time.dt
