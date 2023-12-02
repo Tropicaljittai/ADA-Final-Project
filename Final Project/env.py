@@ -9,8 +9,8 @@ from tiang import Tiang
 from ursina.prefabs.first_person_controller import FirstPersonController as fpc
 
 class environment(Entity):
-    def __init__(self, ground = Entity(model = 'asset/obj/parkinglot.obj', collider = 'mesh', scale = 7, position  = (0,0,0)), **kwargs):
-        self.ground = ground
+    def __init__(self, **kwargs):
+        self.ground = Entity(model = 'asset/obj/parkinglot.obj', collider = 'mesh', scale = 7, position  = (0,0,0)),
         self.modelList = {
             "car": Car(),
             "tiang1" : Tiang(color = color.red, position = (1,0,0)),

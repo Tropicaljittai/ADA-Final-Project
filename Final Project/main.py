@@ -12,12 +12,13 @@ import random
 from tiang import Tiang
 from ursina.prefabs.first_person_controller import FirstPersonController as fpc
 
-
 # create a window
 app = Ursina(
     title = "joseph",
     development_mode = True
 )
+
+Sky()
 
 environment1 = environment()
 
@@ -28,6 +29,7 @@ camera.rotation = (0,0,0)
 pos = 0
 
 camera_button_pressed = False
+
 #controlling the model
 def update():
     #Change Camera Position
@@ -41,7 +43,7 @@ def update():
             elif pos == 1:
                 camera.position = (5,5,-30)
                 camera.rotation = (0,0,0)
-                pos += 1
+                pos = 0
             camera_button_pressed = True
     else:
         camera_button_pressed = False

@@ -1,5 +1,6 @@
 import csv
 from ursina import *
+import time
 import random
 from tiang import Tiang
 from ursina.prefabs.first_person_controller import FirstPersonController as fpc
@@ -13,6 +14,9 @@ class Car(Entity):
     driving_data = []
     is_driving = False
     sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
+
+    cooldown_update = 2.0
+    cooldown_timer = 0.0
     
     def __init__(self, **kwargs):
         super().__init__(
@@ -21,7 +25,9 @@ class Car(Entity):
         scale = 3.5,
         is_driving = False
         )
-        
+        # Physics
+        self.gravity = (0, -9.8, 0)
+
         # Car Statistics
         self.topspeed = -5
         self.acceleration = 0.05
@@ -61,7 +67,7 @@ class Car(Entity):
 
     def save_to_csv(self):
         # Open a CSV file for writing
-        with open('Car.driving_data.csv', 'w', newline='') as file:
+        with open('driving_data.csv', 'w', newline='') as file:
             writer = csv.DictWriter(file, fieldnames=Car.driving_data[0].keys())
             # Write the data to the CSV file
             writer.writeheader()
@@ -76,6 +82,29 @@ class Car(Entity):
             z = vector.x * math.sin(angle_radians) + vector.z * math.cos(angle_radians)
             return Vec3(x, vector.y, z)
     
+    def printCollsion(self,r1,r2,r3,r4,r5,r6,r7,r8):
+        print(f'''
+        R1 - Red = {r1.hit}
+        R2 - Orange = {r2.hit}
+        R3 - Yellow = {r3.hit}
+        R4 - Green = {r4.hit}
+        R5 - Blue = {r5.hit}
+        R6 - Magenta = {r6.hit}
+        R7 - Pink = {r7.hit}
+        R8 - White = {r8.hit}
+              ''')
+    
+    # def actionIfHit(self,r1,r2,r3,r4,r5,r6,r7,r8):
+    #     r1.entity.color = color.black if r1.hit else color.red
+    #     r2.entity.color = color.black if r2.hit else color.orange
+    #     r3.entity.color = color.black if r3.hit else color.yellow
+    #     r4.entity.color = color.black if r4.hit else color.green
+    #     r5.entity.color = color.black if r5.hit else color.blue
+    #     r6.entity.color = color.black if r6.hit else color.magenta
+    #     r7.entity.color = color.black if r7.hit else color.pink
+    #     r8.entity.color = color.black if r8.hit else color.white
+    
+
     def update(self):
         left_45_direction = Car.rotate_vector_y(self.forward, -45)
         left_90_direction = Car.rotate_vector_y(self.forward, -90)
@@ -86,12 +115,19 @@ class Car(Entity):
         r3 = raycast(self.position, direction=left_45_direction, distance=7, debug=True, color = color.yellow)
         r4 = raycast(self.position, direction=-left_45_direction, distance=7, debug=True, color = color.green)
         r5 = raycast(self.position, direction=-left_90_direction, distance=7, debug=True, color = color.blue)
-        r6 = raycast(self.position, direction=left_90_direction, distance=7, debug=True, color = color.azure)
+        r6 = raycast(self.position, direction=left_90_direction, distance=7, debug=True, color = color.magenta)
         r7 = raycast(self.position, direction=right_45_direction, distance=7, debug=True, color = color.pink)
         r8 = raycast(self.position, direction=-right_45_direction, distance=7, debug=True, color = color.white)
 
+        # self.actionIfHit(r1, r2, r3, r4, r5, r6, r7, r8)
 
+        if Car.cooldown_timer == 0.0:
+            self.printCollsion(r1,r2,r3,r4,r5,r6,r7,r8)
 
+        Car.cooldown_timer += time.dt
+
+        if (Car.cooldown_timer >= Car.cooldown_update):
+            Car.cooldown_timer = 0.0
 
         if self.driving:
             Car.is_driving = True
@@ -101,7 +137,6 @@ class Car(Entity):
                 'position': self.position,
                 'rotation': self.rotation,
                 'rotation_speed': self.rotation_speed
-
             }
             Car.driving_data.append(data)
         else:
