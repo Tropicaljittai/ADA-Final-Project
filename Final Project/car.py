@@ -15,7 +15,7 @@ class Car(Entity):
     is_driving = False
     sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
 
-    cooldown_update = 2.0
+    cooldown_update = 1.0
     cooldown_timer = 0.0
     
     def __init__(self, **kwargs):
@@ -65,17 +65,17 @@ class Car(Entity):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def save_to_csv(self):
-        # Open a CSV file for writing
-        with open('driving_data.csv', 'w', newline='') as file:
-            writer = csv.DictWriter(file, fieldnames=Car.driving_data[0].keys())
-            # Write the data to the CSV file
-            writer.writeheader()
-            for data in Car.driving_data:
-                writer.writerow(data)
-        # Reset the Car.driving_data list
-        Car.driving_data = []
-    
+    # def save_to_csv(self):
+    #     # Open a CSV file for writing
+    #     with open('driving_data.csv', 'w', newline='') as file:
+    #         writer = csv.DictWriter(file, fieldnames=Car.driving_data[0].keys())
+    #         # Write the data to the CSV file
+    #         writer.writeheader()
+    #         for data in Car.driving_data:
+    #             writer.writerow(data)
+    #     # Reset the Car.driving_data list
+    #     Car.driving_data = []
+    #
     def rotate_vector_y(vector, angle_degrees):
             angle_radians = math.radians(angle_degrees)
             x = vector.x * math.cos(angle_radians) - vector.z * math.sin(angle_radians)
@@ -94,32 +94,35 @@ class Car(Entity):
         R8 - White = {r8.hit}
               ''')
     
-    # def actionIfHit(self,r1,r2,r3,r4,r5,r6,r7,r8):
-    #     r1.entity.color = color.black if r1.hit else color.red
-    #     r2.entity.color = color.black if r2.hit else color.orange
-    #     r3.entity.color = color.black if r3.hit else color.yellow
-    #     r4.entity.color = color.black if r4.hit else color.green
-    #     r5.entity.color = color.black if r5.hit else color.blue
-    #     r6.entity.color = color.black if r6.hit else color.magenta
-    #     r7.entity.color = color.black if r7.hit else color.pink
-    #     r8.entity.color = color.black if r8.hit else color.white
-    
 
+
+    def cast_and_color_ray(self, direction, initial_color):
+        ray = raycast(self.position, direction=direction, distance=7, debug=True, color=initial_color)
+        if ray.hit:  # If the raycast hits something, change the color to black
+            raycast(self.position, direction=direction, distance=7, debug=True, color=color.black)
+        return ray
     def update(self):
         left_45_direction = Car.rotate_vector_y(self.forward, -45)
         left_90_direction = Car.rotate_vector_y(self.forward, -90)
         right_45_direction = Car.rotate_vector_y(self.forward, 45)
 
-        r1 = raycast(self.position, direction=self.forward, distance=7, debug=True, color = color.red)
-        r2 = raycast(self.position, direction=-self.forward, distance=7, debug=True, color = color.orange)
-        r3 = raycast(self.position, direction=left_45_direction, distance=7, debug=True, color = color.yellow)
-        r4 = raycast(self.position, direction=-left_45_direction, distance=7, debug=True, color = color.green)
-        r5 = raycast(self.position, direction=-left_90_direction, distance=7, debug=True, color = color.blue)
-        r6 = raycast(self.position, direction=left_90_direction, distance=7, debug=True, color = color.magenta)
-        r7 = raycast(self.position, direction=right_45_direction, distance=7, debug=True, color = color.pink)
-        r8 = raycast(self.position, direction=-right_45_direction, distance=7, debug=True, color = color.white)
+        #back sensor
+        r1 = self.cast_and_color_ray(self.forward, color.red)
+        #front sensor
+        r2 = self.cast_and_color_ray(-self.forward, color.orange)
+        #south west sensor
+        r3 = self.cast_and_color_ray(left_45_direction, color.yellow)
+        #north east sensor
+        r4 = self.cast_and_color_ray(-left_45_direction, color.green)
+        #right sensor
+        r5 = self.cast_and_color_ray(-left_90_direction, color.blue)
+        #left sensor
+        r6 = self.cast_and_color_ray(left_90_direction, color.magenta)
+        #south east sensor
+        r7 = self.cast_and_color_ray(right_45_direction, color.pink)
+        #north west sensor
+        r8 = self.cast_and_color_ray(-right_45_direction, color.white)
 
-        # self.actionIfHit(r1, r2, r3, r4, r5, r6, r7, r8)
 
         if Car.cooldown_timer == 0.0:
             self.printCollsion(r1,r2,r3,r4,r5,r6,r7,r8)
@@ -129,21 +132,21 @@ class Car(Entity):
         if (Car.cooldown_timer >= Car.cooldown_update):
             Car.cooldown_timer = 0.0
 
-        if self.driving:
-            Car.is_driving = True
-            data = {
-                'speed': self.speed,
-                'steering_angle': math.degrees(self.pivot.rotation_z),
-                'position': self.position,
-                'rotation': self.rotation,
-                'rotation_speed': self.rotation_speed
-            }
-            Car.driving_data.append(data)
-        else:
-            Car.is_driving = False
-
-            if Car.driving_data:
-                self.save_to_csv()
+        # if self.driving:
+        #     Car.is_driving = True
+        #     data = {
+        #         'speed': self.speed,
+        #         'steering_angle': math.degrees(self.pivot.rotation_z),
+        #         'position': self.position,
+        #         'rotation': self.rotation,
+        #         'rotation_speed': self.rotation_speed
+        #     }
+        #     Car.driving_data.append(data)
+        # else:
+        #     Car.is_driving = False
+        #
+        #     if Car.driving_data:
+        #         self.save_to_csv()
 
 
         y_ray = raycast(origin = self.world_position, direction = (0, -1, 0), ignore = [self, ])
