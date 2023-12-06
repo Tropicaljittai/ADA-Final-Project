@@ -3,12 +3,15 @@ import random
 from ursina.prefabs.first_person_controller import FirstPersonController as fpc
 
 class Tiang(Entity):
+    cooldown_timer = 0.0
+    cooldown_update = 1.0
     def __init__(self, **kwargs):
         super().__init__()
+        self.name = ""
         self.model = "asset/obj/tiang.obj"
         self.scale = 6.5
         self.collider = 'mesh'
-        self.collision = True
+        self.collision = False
         self.rigidbody = True
 
         # Physics

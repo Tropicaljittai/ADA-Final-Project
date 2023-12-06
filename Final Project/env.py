@@ -18,7 +18,23 @@ class environment(Entity):
             "tiang3" : Tiang(color = color.green, position = (-5,0,-20)),
             "tiang4" : Tiang(color = color.yellow, position = (7.25,0,23), rotation = (0,180,0)),
             "tiang5" : Tiang(color = color.white, position = (7.25,0,16), rotation = (0,180,0)),
-            "tiang6" : Tiang(color = color.black, position = (13,0,-1), rotation = (0,180,0))
+            "tiang6" : Tiang(color = color.black, position = (13,0,-1), rotation = (0,180,0)),
+        }
+        self.barrierList = {
+            "bar1": Entity(model = "wireframe_cube", scale = 35, position = (-30,0,0), collider = "box", color = color.red, visible = False),
+            "bar2": Entity(model = "wireframe_cube", scale = 35, position = (40,0,0), collider = "box", color = color.blue, visible = False),
+            "bar3": Entity(model = "wireframe_cube", scale = 35, position = (4,0,-36), collider = "box", color = color.green, visible = False),
+            "bar4": Entity(model = "wireframe_cube", scale = 35, position = (4,0, 33), collider = "box", visible = False),
         }
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+    def summonCar(self):
+        destroy(self.modelList["car"])
+        self.modelList["car"] = Car()
+
+    def visibleBarrier(self, bool):
+        self.barrierList["bar1"].visible = bool
+        self.barrierList["bar2"].visible = bool
+        self.barrierList["bar3"].visible = bool
+        self.barrierList["bar4"].visible = bool

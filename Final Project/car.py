@@ -93,14 +93,13 @@ class Car(Entity):
         R7 - Pink = {r7.hit}
         R8 - White = {r8.hit}
               ''')
-    
-
 
     def cast_and_color_ray(self, direction, initial_color):
         ray = raycast(self.position, direction=direction, distance=7, debug=True, color=initial_color)
         if ray.hit:  # If the raycast hits something, change the color to black
             raycast(self.position, direction=direction, distance=7, debug=True, color=color.black)
         return ray
+
     def update(self):
         left_45_direction = Car.rotate_vector_y(self.forward, -45)
         left_90_direction = Car.rotate_vector_y(self.forward, -90)
