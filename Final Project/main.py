@@ -33,11 +33,14 @@ environment1 = environment()
 
 #camera config
 camera.fov = 60
-camera.position = (5,5,-30)
-camera.rotation = (0,0,0)
+camera.position = (-4, 35, -30)
+camera.rotation = (53, 10, 0)
 pos = 0
 
-camera_button_pressed = False
+# camera.parent = environment1.modelList["car"]
+# camera.z = -40
+# camera.x = -10
+# camera.y = 50
 respawn_pressed = False
 barrier_visible_pressed = False
 barrier_visible_active = False

@@ -29,9 +29,9 @@ class Car(Entity):
         self.gravity = (0, -9.8, 0)
 
         # Car Statistics
-        self.engine_force = 0
+        self.engine_force = 1
         self.braking_force = 0
-        self.steering_force = 0
+        self.steering_force = 0.5
         self.topspeed = -5
         self.acceleration = 0.05
         self.braking_strength = 5
@@ -104,7 +104,6 @@ class Car(Entity):
         return ray
 
     def update(self):
-        self.rotation_y = 90
         print(self.rotation_y)
         left_45_direction = Car.rotate_vector_y(self.forward, -45)
         left_90_direction = Car.rotate_vector_y(self.forward, -90)
