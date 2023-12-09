@@ -46,8 +46,8 @@ class environment(Entity):
         # reward += max(0, 1 - distance_to_parking_spot)
 
         # Additional reward for proper parking alignment
-        alignment = self.modelList['car'].rotation_y - 90 # Calculate alignment angle
-        reward += max(0, 1 - abs(alignment))
+        # alignment = self.modelList['car'].rotation_y - 90 # Calculate alignment angle
+        # reward += max(0, 1 - abs(alignment))
 
         # Penalize for collisions or moving away
         if car.has_collided:

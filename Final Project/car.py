@@ -31,7 +31,7 @@ class Car(Entity):
         # Car Statistics
         self.engine_force = 1
         self.braking_force = 0
-        self.steering_force = 0.5
+        self.steering_force = -1
         self.topspeed = -5
         self.acceleration = 0.05
         self.braking_strength = 5
@@ -168,7 +168,7 @@ class Car(Entity):
         elif self.rotation_speed < 0:
             self.rotation_speed += self.speed / 6 * time.dt
 
-        if self.speed >= 0.7:
+        if self.speed >= 0.7 or self.speed <= -0.7:
             if self.steering_force > 0 or self.steering_force < 0:
                 self.rotation_speed += self.steering_force * self.steering_amount * time.dt
                 if self.speed >= 1:
