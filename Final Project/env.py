@@ -38,3 +38,19 @@ class environment(Entity):
         self.barrierList["bar2"].visible = bool
         self.barrierList["bar3"].visible = bool
         self.barrierList["bar4"].visible = bool
+
+    def calculate_reward(self, car):
+        reward = 0
+        # Calculate positive rewards for proximity to the parking spot
+        distance_to_parking_spot = self.modelList['car'].position
+        reward += max(0, 1 - distance_to_parking_spot)
+
+        # Additional reward for proper parking alignment
+        alignment = ...  # Calculate alignment angle
+        reward += max(0, 1 - abs(alignment))
+
+        # Penalize for collisions or moving away
+        if car.has_collided:
+            reward -= 5  # Example penalty for collision
+
+        return reward

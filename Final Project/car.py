@@ -29,6 +29,9 @@ class Car(Entity):
         self.gravity = (0, -9.8, 0)
 
         # Car Statistics
+        self.engine_force = 0
+        self.braking_force = 0
+        self.steering_force = 0
         self.topspeed = -5
         self.acceleration = 0.05
         self.braking_strength = 5
@@ -101,6 +104,8 @@ class Car(Entity):
         return ray
 
     def update(self):
+        self.rotation_y = 90
+        print(self.rotation_y)
         left_45_direction = Car.rotate_vector_y(self.forward, -45)
         left_90_direction = Car.rotate_vector_y(self.forward, -90)
         right_45_direction = Car.rotate_vector_y(self.forward, 45)
@@ -165,34 +170,10 @@ class Car(Entity):
             self.rotation_speed += self.speed / 6 * time.dt
 
         if self.speed >= 0.7:
-            if held_keys[self.controls[1]] or held_keys["left arrow"]:
-                self.rotation_speed += self.steering_amount * time.dt
+            if self.steering_force > 0 or self.steering_force < 0:
+                self.rotation_speed += self.steering_force * self.steering_amount * time.dt
                 if self.speed >= 1:
                     self.speed -= self.turning_speed / 5 * time.dt
-                elif self.speed <= 0:
-                    self.speed += self.turning_speed / 5 * time.dt
-            elif held_keys[self.controls[3]] or held_keys["right arrow"]:
-                self.rotation_speed -= self.steering_amount * time.dt
-                if self.speed >= 1:
-                    self.speed -= self.turning_speed /5 * time.dt
-                elif self.speed <= 0:
-                    self.speed += self.turning_speed / 5 * time.dt
-            else:
-                if self.rotation_speed > 0:
-                    self.rotation_speed -= 5 * time.dt
-                elif self.rotation_speed < 0:
-                    self.rotation_speed += 5 * time.dt
-        elif self.speed <= -0.7:
-            if held_keys[self.controls[1]] or held_keys["left arrow"]:
-                self.rotation_speed -= self.steering_amount * time.dt
-                if self.speed >= 1:
-                    self.speed -= self.turning_speed / 5 * time.dt
-                elif self.speed <= 0:
-                    self.speed += self.turning_speed / 5 * time.dt
-            elif held_keys[self.controls[3]] or held_keys["right arrow"]:
-                self.rotation_speed += self.steering_amount * time.dt
-                if self.speed >= 1:
-                    self.speed -= self.turning_speed /5 * time.dt
                 elif self.speed <= 0:
                     self.speed += self.turning_speed / 5 * time.dt
             else:
@@ -219,20 +200,12 @@ class Car(Entity):
             self.rotation_speed = -self.max_rotation_speed
         
 
-        if held_keys[self.controls[0]] or held_keys["up arrow"]:
-            self.speed -= self.acceleration * 50 * time.dt
-            self.speed -= -self.velocity_y * 4 * time.dt
+        self.speed -= self.engine_force  * self.acceleration * 50 * time.dt
+        self.speed -= self.engine_force  * -self.velocity_y * 4 * time.dt
 
-            self.driving = True
+        self.driving = True
 
-        # Braking
-        if held_keys[self.controls[2] or held_keys["down arrow"]]:
-            self.speed += self.acceleration * 50 * time.dt
-            self.speed += -self.velocity_y * 4 * time.dt
-
-            self.driving = True
-
-        if not (held_keys[self.controls[0]] or held_keys["up arrow"]) and not (held_keys[self.controls[2] or held_keys["down arrow"]]):
+        if self.engine_force == 0:
             self.driving = False
             if self.speed < -1:
                 self.speed += self.friction * 5 * time.dt
@@ -246,21 +219,20 @@ class Car(Entity):
 
 
         # Hand Braking
-        if held_keys["space"]:
-            if self.speed < 0:
-                if self.rotation_speed < 0:
-                    self.rotation_speed -= 3 * time.dt
-                elif self.rotation_speed > 0:
-                    self.rotation_speed += 3 * time.dt
-                self.speed += 20 * time.dt
-                self.max_rotation_speed = 3.0
-            if self.speed > 0:
-                if self.rotation_speed < 0:
-                    self.rotation_speed -= 3 * time.dt
-                elif self.rotation_speed > 0:
-                    self.rotation_speed += 3 * time.dt
-                self.speed -= 20 * time.dt
-                self.max_rotation_speed = 3.0
+        if self.speed < 0:
+            if self.rotation_speed < 0:
+                self.rotation_speed -= 3 * time.dt
+            elif self.rotation_speed > 0:
+                self.rotation_speed += 3 * time.dt
+            self.speed += self.braking_force  * 20 * time.dt
+            self.max_rotation_speed = 3.0
+        if self.speed > 0:
+            if self.rotation_speed < 0:
+                self.rotation_speed -= 3 * time.dt
+            elif self.rotation_speed > 0:
+                self.rotation_speed += 3 * time.dt
+            self.speed -= self.braking_force  * 20 * time.dt
+            self.max_rotation_speed = 3.0
 
         if self.visible:
             if y_ray.distance <= self.scale_y * 1.7 + abs(movementY):
