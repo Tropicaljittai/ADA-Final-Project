@@ -38,7 +38,7 @@ class PPO:
                 #Calculate ratio
                 ratio = torch.exp(curr_log_probs - batch_logs)
                 #Calculate Surrogate losses
-                srg1 = ratio*Adv_K
+                srg1 = ratio*Adv_K;
                 srg2 = torch.clamp(ratio, 1 - self.clip, 1 + self.clip) * Adv_K
 
                 actor_loss = (-torch.min(srg1,srg2)).mean()

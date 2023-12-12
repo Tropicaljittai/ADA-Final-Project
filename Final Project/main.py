@@ -44,6 +44,7 @@ pos = 0
 respawn_pressed = False
 barrier_visible_pressed = False
 barrier_visible_active = False
+driving_mode_pressed = False
 
 #controlling the model
 def update():
@@ -67,14 +68,15 @@ def update():
     
     if held_keys["p"]:
         if not respawn_pressed:
-            environment1.summonCar()
+            environment1.summonCar(True)
+
+    if held_keys["l"]:
+        if not respawn_pressed:
+            environment1.summonCar(False)
 
     if held_keys["v"]:
         if not barrier_visible_pressed:
             environment1.visibleBarrier(barrier_visible_active)
             barrier_visible_active = False if barrier_visible_active else True
-            
-            
         
-
 app.run()

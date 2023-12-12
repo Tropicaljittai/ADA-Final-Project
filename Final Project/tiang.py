@@ -11,7 +11,7 @@ class Tiang(Entity):
         self.model = "asset/obj/tiang.obj"
         self.scale = 6.5
         self.collider = 'mesh'
-        self.collision = False
+        self.collision = True
         self.rigidbody = True
 
         # Physics
