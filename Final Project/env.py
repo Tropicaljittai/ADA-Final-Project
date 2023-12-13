@@ -12,6 +12,7 @@ from gym import spaces
 class environment(Entity):
     def __init__(self, **kwargs):
         self.ground = Entity(model = 'asset/obj/parkinglot.obj', collider = 'mesh', scale = 7, position  = (0,0,0)),
+        self.target_pos = Vec3(9,2,-7)
         self.action_space = spaces.Discrete(4)
         min_x, max_x = -7, 7  # Spanning 14 meters in x-direction
         min_y, max_y = -21, 21  # Spanning 42 meters in y-direction
@@ -60,13 +61,17 @@ class environment(Entity):
     def cal_distance(self,pos1, pos2):
         return math.sqrt((pos1.x-pos2.x)**2 + (pos1.x-pos2.y)**2 + (pos1.z-pos2.z)**2)
     def get_state(self):
-        distance_to_target = self.cal_distance(self.modelList['car'], self.target_pos)
-        car_state = {
-            "position" : self.modelList['car'].position,
-            "rotation" : self.modelList['car'].rotation,
-            "speed" : self.modelList['car'].speed,
-            "distance_to_target" : distance_to_target,
-        }
+        car = self.modelList['car']
+        pos = car.position
+        rot = car.rotation
+        speed = car.speed
+        distance_to_target = self.cal_distance(car, self.target_pos)
+
+        # Flatten the state into a single array
+        # Assuming pos and rot are simple x, y, z coordinates
+        state = np.array([pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, speed, distance_to_target])
+
+        return state
 
     def change_wireframe_color(self):
         self.modelList["rectangle_3d"].color = color.green
@@ -105,9 +110,9 @@ class environment(Entity):
         return distance_to_target <= parking_threshold
 
     def reset(self):
-        reset_car = self.summonCar(True)
-
-        return reset_car
+        # reset_car = self.summonCar(True)
+        get_state = self.get_state()
+        return get_state
 
     def step(self,action):
         reward = self.calculate_reward(self.modelList['car'])

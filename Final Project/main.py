@@ -3,7 +3,7 @@ import math
 import time
 import numpy as np
 from env import environment
-
+import gym
 from car import Car
 from ppo_agent import Agent
 from env import environment
@@ -19,7 +19,7 @@ app = Ursina(
 )
 EditorCamera()
 Sky()
-
+env = gym.make('CartPole-v0')
 environment1 = environment()
 N = 20
 batch_size = 5
@@ -68,6 +68,7 @@ def update():
         done = False
         score = 0
         while not done:
+            print(observation)
             action, prob, val = agent.choose_action(observation)
             observation_, reward, done, info = environment1.step(action)
             n_steps += 1

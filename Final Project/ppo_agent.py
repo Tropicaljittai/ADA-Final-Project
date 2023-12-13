@@ -74,8 +74,7 @@ class Agent:
         self.critic.load_checkpoint()
 
     def choose_action(self, observation):
-        state = T.tensor([observation], dtype=T.float).to(self.actor)
-
+        state = T.tensor([observation], dtype=T.float).to(self.actor.device)
         dist = self.actor(state)
         value = self.critic(state)
         action = dist.sample()
@@ -89,7 +88,7 @@ class Agent:
     def learn(self):
         for _ in range(self.n_epochs):
             state_arr, action_arr, old_prob_arr, vals_arr, \
-                reward_arr, dones_arr, batches = \
+            reward_arr, dones_arr, batches = \
                 self.memory.generate_batches()
 
             values = vals_arr
