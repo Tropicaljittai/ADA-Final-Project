@@ -1,12 +1,12 @@
 import csv
 import math
 import time
-
+import numpy as np
 from env import environment
 
 from car import Car
-
-# from env import environment
+from ppo_agent import Agent
+from env import environment
 from ursina import *
 import random
 from tiang import Tiang
@@ -21,6 +21,13 @@ EditorCamera()
 Sky()
 
 environment1 = environment()
+N = 20
+batch_size = 5
+n_epochs = 4
+alpha = 0.0003
+agent = Agent(n_actions=environment1.action_space.n, batch_size=batch_size,
+                    alpha=alpha, n_epochs=n_epochs,
+                    input_dims=environment1.observation_space.shape)
 
 
 # def create_barrier(position, scale):
@@ -48,6 +55,37 @@ driving_mode_pressed = False
 
 #controlling the model
 def update():
+    n_games = 300
+    best_score = -100
+    score_history = []
+
+    learn_iters = 0
+    avg_score = 0
+    n_steps = 0
+
+    for i in range(n_games):
+        observation = environment1.reset()
+        done = False
+        score = 0
+        while not done:
+            action, prob, val = agent.choose_action(observation)
+            observation_, reward, done, info = environment1.step(action)
+            n_steps += 1
+            score += reward
+            agent.remember(observation, action, prob, val, reward, done)
+            if n_steps % N == 0:
+                agent.learn()
+                learn_iters += 1
+            observation = observation_
+        score_history.append(score)
+        avg_score = np.mean(score_history[-100:])
+
+        if avg_score > best_score:
+            best_score = avg_score
+            agent.save_models()
+
+        print('episode', i, 'score %.1f' % score, 'avg score %.1f' % avg_score,
+              'time_steps', n_steps, 'learning_steps', learn_iters)
     #Change Camera Position
     global pos, camera_button_pressed, respawn_pressed, barrier_visible_pressed, barrier_visible_active
     if held_keys["c"]:

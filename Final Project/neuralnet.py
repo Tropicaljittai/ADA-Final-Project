@@ -2,21 +2,43 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
+from torch.optim import Adam
+from torch.distributions.categorical import Categorical
 
-class FeedForwardNuralNet(nn.Module):
-    def __init__(self, in_dim, out_dim):
-        super(FeedForwardNuralNet, self).__init__()
 
-        self.layer1 = nn.Linear(in_dim, 128)
-        self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, out_dim)
-    def forward(self, obs):
-        if isinstance(obs, np.ndarray):
-            obs = torch.tensor(obs, dtype=torch.float)
+class FeedForwardActorNuralNet(nn.Module):
+    def __init__(self, n_actions, input_dims, alpha,fc1_dim=128, fc2_dim=128):
+        super(FeedForwardActorNuralNet, self).__init__()
 
-        activation1 = F.relu(self.layer1(obs))
-        activation2 = F.relu(self.layer2(activation1))
-        output  = self.layer3(activation2)
+        self.actor = nn.Sequential(
+            nn.Linear(*input_dims, fc1_dim),
+            nn.ReLU(),
+            nn.Linear(fc1_dim, fc2_dim),
+            nn.ReLU(),
+            nn.Linear(fc2_dim, n_actions),
+            nn.Softmax(dim=-1)
+        )
 
-        return output
+        self.optimizer = Adam(self.parameters(), lr=alpha)
+    def forward(self, state):
+        dist = self.actor(state)
+        dist = Categorical(dist)
 
+        return dist
+
+class FeedForwardCriticNuralNet(nn.Module):
+    def __init__(self, input_dims, alpha,fc1_dim=128, fc2_dim=128):
+        super(FeedForwardCriticNuralNet, self).__init__()
+
+        self.critic = nn.Sequential(
+            nn.Linear(*input_dims, fc1_dim),
+            nn.ReLU(),
+            nn.Linear(fc1_dim, fc2_dim),
+            nn.ReLU(),
+            nn.Linear(fc2_dim, 1)
+        )
+        self.optimizer = Adam(self.parameters(), lr=alpha)
+    def forward(self, state):
+        value = self.critic(state)
+
+        return value

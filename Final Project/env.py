@@ -1,17 +1,24 @@
 import csv
 import math
 import time
-
+import numpy as np
 from ursina import *
 import random
 from car import Car
 from carObj import CarObj
 from tiang import Tiang
 from ursina.prefabs.first_person_controller import FirstPersonController as fpc
-
+from gym import spaces
 class environment(Entity):
     def __init__(self, **kwargs):
         self.ground = Entity(model = 'asset/obj/parkinglot.obj', collider = 'mesh', scale = 7, position  = (0,0,0)),
+        self.action_space = spaces.Discrete(4)
+        min_x, max_x = -7, 7  # Spanning 14 meters in x-direction
+        min_y, max_y = -21, 21  # Spanning 42 meters in y-direction
+        min_yaw, max_yaw = 0,360
+        self.observation_space = spaces.Box(low=np.array([min_x, min_y, min_yaw]),
+                                            high=np.array([max_x, max_y, max_yaw]),
+                                            dtype=np.float32)
         self.modelList = {
             "car": Car(),
             "tiang1" : Tiang(color = color.red, position = (1,0,0)),
@@ -50,21 +57,65 @@ class environment(Entity):
     def change_wireframe_color(self):
         self.modelList["rectangle_3d"].color = color.green
 
+    def cal_distance(self,pos1, pos2):
+        return math.sqrt((pos1.x-pos2.x)**2 + (pos1.x-pos2.y)**2 + (pos1.z-pos2.z)**2)
+    def get_state(self):
+        distance_to_target = self.cal_distance(self.modelList['car'], self.target_pos)
+        car_state = {
+            "position" : self.modelList['car'].position,
+            "rotation" : self.modelList['car'].rotation,
+            "speed" : self.modelList['car'].speed,
+            "distance_to_target" : distance_to_target,
+        }
+
+    def change_wireframe_color(self):
+        self.modelList["rectangle_3d"].color = color.green
     def calculate_reward(self, car):
         reward = 0
-        # Calculate positive rewards for proximity to the parking spot
-        # distance_to_parking_spot = self.modelList['car'].position - target.position
-        # reward += max(0, 1 - distance_to_parking_spot)
 
-        # Additional reward for proper parking alignment
-        # alignment = self.modelList['car'].rotation_y - 90 # Calculate alignment angle
-        # reward += max(0, 1 - abs(alignment))
+        # Calculate the distance to the target
+        distance_to_target = self.cal_distance(self.modelList['car'].position, self.target_pos)
 
-        # Penalize for collisions or moving away
-        if car.has_collided:
-            reward -= 5  # Example penalty for collision
+        # Add reward based on proximity to the target
+        # The closer the car is to the target, the higher the reward
+        # You can adjust the scale factor to suit the specific scale of your environment
+        proximity_reward = max(0, 10 - distance_to_target)  # Example: Reward decreases with distance
+        reward += proximity_reward
+
+        # Penalize for collisions
+        if car.hitting_wall:
+            reward -= 5
+
+        # Cap the minimum reward
+        reward = max(reward, -20)
 
         return reward
+
+    def isDone(self):
+        done = False
+        if self.isParked():
+            done = True
+        if self.modelList['car'].hitting_wall:
+            done = True
+
+    def isParked(self):
+        distance_to_target = self.cal_distance(self.modelList['car'], self.target_pos)
+        parking_threshold = self.modelList['car'].length / 2  # Half the car's length as a threshold
+
+        return distance_to_target <= parking_threshold
+
+    def reset(self):
+        reset_car = self.summonCar(True)
+
+        return reset_car
+
+    def step(self,action):
+        reward = self.calculate_reward(self.modelList['car'])
+
+        isDone = self.isDone()
+        reset = self.reset()
+
+        return self.get_state(), reward, isDone, reset
     
     def update(self):
         if self.modelList["car"].x < self.modelList["rectangle_3d"].x + self.modelList["rectangle_3d"].scale_x/2 and \
