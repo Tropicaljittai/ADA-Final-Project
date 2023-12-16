@@ -23,11 +23,15 @@ env = gym.make('CartPole-v0')
 environment1 = environment()
 N = 20
 batch_size = 5
-n_epochs = 4
+n_epochs = 100
 alpha = 0.0003
-agent = Agent(n_actions=environment1.action_space.n, batch_size=batch_size,
+agent = Agent(n_actions=environment1.action_space.shape[0], batch_size=batch_size,
                     alpha=alpha, n_epochs=n_epochs,
                     input_dims=environment1.observation_space.shape)
+print("_________________________________")
+print(environment1.action_space.shape[0])
+print("_________________________________")
+
 
 
 # def create_barrier(position, scale):
@@ -35,7 +39,7 @@ agent = Agent(n_actions=environment1.action_space.n, batch_size=batch_size,
     
 # barrier_left = create_barrier(position=(environment1.ground - environment1.ground.scale_x / 2, 0, 0), scale=(0.1, 1, environment1.ground.scale_z))
 # barrier_right = create_barrier(position=(environment1.ground.x + environment1.ground.scale_x / 2, 0, 0), scale=(0.1, 1, environment1.ground.scale_z))
-# barrier_front = create_barrier(position=(0, 0, environment1.ground.z - environment1.ground.scale_z / 2), scale=(environment1.ground.scale_x, 1, 0.1))
+# barrier_front = create_barrier(position=(0, 0, environment1.ground.z - environmenwt1.ground.scale_z / 2), scale=(environment1.ground.scale_x, 1, 0.1))
 # barrier_back = create_barrier(position=(0, 0, environment1.ground.z + environment1.ground.scale_z / 2), scale=(environment1.ground.scale_x, 1, 0.1))
 
 #camera config

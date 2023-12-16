@@ -5,6 +5,82 @@ from torch.optim import Adam
 from neuralnet import *
 import torch.nn as nn
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import numpy as np
+
+class NeuralNetwork(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(NeuralNetwork, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc3 = nn.Linear(hidden_size, hidden_size)
+        self.fc4 = nn.Linear(hidden_size, output_size)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.relu(self.fc3(x))
+        x = self.fc4(x)
+        return x
+
+class PPOAgent:
+    def __init__(self, input_size, output_size, hidden_size=128):
+        self.input_size = input_size
+        self.output_size = output_size
+        self.hidden_size = hidden_size
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        self.actor = NeuralNetwork(input_size, hidden_size, output_size).to(self.device)
+        self.critic = NeuralNetwork(input_size, hidden_size, 1).to(self.device)
+        self.optimizer = optim.Adam(list(self.actor.parameters()) + list(self.critic.parameters()), lr=0.0003)
+
+    def choose_action(self, state):
+        state = torch.tensor(state, dtype=torch.float).to(self.device)
+        action_probs = torch.softmax(self.actor(state), dim=-1)
+        action = torch.multinomial(action_probs, num_samples=1).item()
+        return action
+
+    def update(self, states, actions, rewards, dones, next_states):
+        states = torch.tensor(states, dtype=torch.float).to(self.device)
+        actions = torch.tensor(actions, dtype=torch.long).to(self.device)
+        rewards = torch.tensor(rewards, dtype=torch.float).to(self.device)
+        dones = torch.tensor(dones, dtype=torch.float).to(self.device)
+        next_states = torch.tensor(next_states, dtype=torch.float).to(self.device)
+
+        values = self.critic(states).squeeze()
+        next_values = self.critic(next_states).squeeze()
+        advantages = rewards + (1 - dones) * 0.99 * next_values - values
+
+        action_probs = torch.softmax(self.actor(states), dim=-1)
+        action_log_probs = torch.log(action_probs.gather(1, actions.unsqueeze(1))).squeeze()
+
+        ratio = torch.exp(action_log_probs - action_log_probs.detach())
+        surrogate1 = ratio * advantages
+        surrogate2 = torch.clamp(ratio, 1 - 0.2, 1 + 0.2) * advantages
+        actor_loss = -torch.min(surrogate1, surrogate2).mean()
+
+        critic_loss = nn.MSELoss()(values, rewards)
+
+        self.optimizer.zero_grad()
+        loss = actor_loss + critic_loss
+        loss.backward()
+        self.optimizer.step()
+
+    def save_model(self, path):
+        torch.save({
+            'actor_state_dict': self.actor.state_dict(),
+            'critic_state_dict': self.critic.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict()
+        }, path)
+
+    def load_model(self, path):
+        checkpoint = torch.load(path)
+        self.actor.load_state_dict(checkpoint['actor_state_dict'])
+        self.critic.load_state_dict(checkpoint['critic_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
 
 class PPOMemory:
     def __init__(self, batch_size):
@@ -55,6 +131,7 @@ class Agent:
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
         self.gae_lambda = gae_lambda
+        self.n_actions = n_actions
 
         self.actor = FeedForwardActorNuralNet(n_actions, input_dims, alpha)
         self.critic = FeedForwardCriticNuralNet(input_dims, alpha)
@@ -90,7 +167,25 @@ class Agent:
             state_arr, action_arr, old_prob_arr, vals_arr, \
             reward_arr, dones_arr, batches = \
                 self.memory.generate_batches()
+            
+            # print("-------")
+            # print(self.n_actions)
+            # print("-------")
+            # print(
+            #     f'''
+            #     state_array = {state_arr},
+            #     action_array = {action_arr},
+            #     old_prob_array = {old_prob_arr},
+            #     vals_array = {vals_arr},
+            #     reward_array = {reward_arr},
+            #     dones_array = {dones_arr},
+            #     batches = {batches},
+            #     '''
+            # )   
 
+            # if any(done is None for done in dones_arr):
+            #     raise ValueError("dones_arr contains None values")
+            
             values = vals_arr
             advantage = np.zeros(len(reward_arr), dtype=np.float32)
 
@@ -99,7 +194,7 @@ class Agent:
                 a_t = 0
                 for k in range(t, len(reward_arr) - 1):
                     a_t += discount * (reward_arr[k] + self.gamma * values[k + 1] * \
-                                       (1 - int(dones_arr[k])) - values[k])
+                                       (1 - int(0 if dones_arr[k] is None else dones_arr[k])) - values[k])
                     discount *= self.gamma * self.gae_lambda
                 advantage[t] = a_t
             advantage = T.tensor(advantage).to(self.actor.device)

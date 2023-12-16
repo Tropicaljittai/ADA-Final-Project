@@ -23,7 +23,8 @@ class Car(Entity):
         model = 'asset/gltf/car_sedan.gltf',
         position = (1,0.1,-0.6),
         scale = 3.5,
-        is_driving = False
+        is_driving = False,
+        length = 5
         )
         # Physics
         self.gravity = (0, -9.8, 0)
@@ -74,6 +75,32 @@ class Car(Entity):
             z = vector.x * math.sin(angle_radians) + vector.z * math.cos(angle_radians)
             return Vec3(x, vector.y, z)
     
+    def get_sensor_readings(self):
+        # Using your existing sensor setup
+        left_45_direction = Car.rotate_vector_y(self.forward, -45)
+        left_90_direction = Car.rotate_vector_y(self.forward, -90)
+        right_45_direction = Car.rotate_vector_y(self.forward, 45)
+
+        # Cast rays and get sensor readings
+        r1 = self.cast_and_color_ray(self.forward, color.red)
+        r2 = self.cast_and_color_ray(-self.forward, color.orange)
+        r3 = self.cast_and_color_ray(left_45_direction, color.yellow)
+        r4 = self.cast_and_color_ray(-left_45_direction, color.green)
+        r5 = self.cast_and_color_ray(-left_90_direction, color.blue)
+        r6 = self.cast_and_color_ray(left_90_direction, color.magenta)
+        r7 = self.cast_and_color_ray(right_45_direction, color.pink)
+        r8 = self.cast_and_color_ray(-right_45_direction, color.white)
+
+        # Return the sensor readings as a list of distances
+        # sensor_readings = [r.distance for r in [r1, r2, r3, r4, r5, r6, r7, r8]]
+
+        # Normalize the sensor readings to a range [0, 1]
+        MAX_SENSOR_RANGE = 100  # Adjust based on your sensor's maximum range
+        normalized_readings = [min(r.distance / MAX_SENSOR_RANGE, 1) for r in [r1, r2, r3, r4, r5, r6, r7, r8]]
+
+        print(normalized_readings)
+        return normalized_readings
+    
     def printCollsion(self,r1,r2,r3,r4,r5,r6,r7,r8):
         print(f'''
         R1 - Red = {r1.hit}
@@ -85,6 +112,9 @@ class Car(Entity):
         R7 - Pink = {r7.hit}
         R8 - White = {r8.hit}
               ''')
+        
+    def hitting_wall(self):
+        return self.intersects(any)
 
     def cast_and_color_ray(self, direction, initial_color):
         ray = raycast(self.position, direction=direction, distance=7, debug=True, color=initial_color)
@@ -93,7 +123,8 @@ class Car(Entity):
         return ray
 
     def update(self):
-        if self.is_driving:
+        # self.get_sensor_readings()
+        if not self.is_driving:
             left_45_direction = Car.rotate_vector_y(self.forward, -45)
             left_90_direction = Car.rotate_vector_y(self.forward, -90)
             right_45_direction = Car.rotate_vector_y(self.forward, 45)

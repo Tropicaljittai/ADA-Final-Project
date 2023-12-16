@@ -15,7 +15,7 @@ class FeedForwardActorNuralNet(nn.Module):
         input_dim = np.prod(*input_dims)
 
         self.actor = nn.Sequential(
-            nn.Linear(input_dim, fc1_dim),
+            nn.Linear(16, fc1_dim),
             nn.ReLU(),
             nn.Linear(fc1_dim, fc2_dim),
             nn.ReLU(),
@@ -26,6 +26,7 @@ class FeedForwardActorNuralNet(nn.Module):
         self.optimizer = Adam(self.parameters(), lr=alpha)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
+
     def forward(self, state):
         dist = self.actor(state)
         dist = Categorical(dist)
@@ -44,7 +45,7 @@ class FeedForwardCriticNuralNet(nn.Module):
         input_dim = np.prod(*input_dims)
 
         self.critic = nn.Sequential(
-            nn.Linear(input_dim, fc1_dim),
+            nn.Linear(16, fc1_dim),
             nn.ReLU(),
             nn.Linear(fc1_dim, fc2_dim),
             nn.ReLU(),

@@ -13,7 +13,6 @@ class environment(Entity):
     def __init__(self, **kwargs):
         self.ground = Entity(model = 'asset/obj/parkinglot.obj', collider = 'mesh', scale = 7, position  = (0,0,0)),
         self.target_pos = Vec3(9,2,-7)
-        self.action_space = spaces.Discrete(4)
         min_x, max_x = -7, 7  # Spanning 14 meters in x-direction
         min_y, max_y = -21, 21  # Spanning 42 meters in y-direction
         min_yaw, max_yaw = 0,360
@@ -35,7 +34,12 @@ class environment(Entity):
             "carObj5": CarObj(color = color.brown, position = (9,0,-3.75), rotation = (0,90,0)),
             "carObj6": CarObj(color = color.gold, position = (9,0,-10), rotation = (0,90,0)),
            'rectangle_3d': Entity(model="cube", color=color.red, scale=(4, 4, 2.5), wireframe=True, position = (9,2,-7))
-        }   
+        }  
+        action_low = np.array([0, -1, -1])
+        action_high = np.array([1, 1, 1])
+
+        self.action_space = spaces.Box(low=action_low, high=action_high, dtype=np.float32)
+         
         self.barrierList = {
             "bar1": Entity(model = "wireframe_cube", scale = 35, position = (-30,0,0), collider = "box", color = color.red, visible = False),
             "bar2": Entity(model = "wireframe_cube", scale = 35, position = (40,0,0), collider = "box", color = color.blue, visible = False),
@@ -60,17 +64,18 @@ class environment(Entity):
 
     def cal_distance(self,pos1, pos2):
         return math.sqrt((pos1.x-pos2.x)**2 + (pos1.x-pos2.y)**2 + (pos1.z-pos2.z)**2)
+    
     def get_state(self):
         car = self.modelList['car']
         pos = car.position
         rot = car.rotation
         speed = car.speed
         distance_to_target = self.cal_distance(car, self.target_pos)
-
+        sensor = car.get_sensor_readings()
         # Flatten the state into a single array
         # Assuming pos and rot are simple x, y, z coordinates
-        state = np.array([pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, speed, distance_to_target])
-
+        # state = np.array([pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, speed, distance_to_target])
+        state = np.concatenate(([pos.x, pos.y, pos.z, rot.x, rot.y, rot.z, speed, distance_to_target], sensor))
         return state
 
     def change_wireframe_color(self):
